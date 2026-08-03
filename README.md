@@ -24,8 +24,8 @@ lecture material, I aim to:
 |---|---|---|---|
 | 1 | Deep learning fundamentals | MIT 6.S191 lecture notes and examples | In progress |
 | 2 | NumPy MLP | Two-layer neural network with forward and backward passes implemented from scratch | **Completed** |
-| 3 | Gradient checking | Comparison of numerical and analytical gradients | Next |
-| 4 | PyTorch fundamentals | Tensors, autograd, `nn.Module`, and training loops | Planned |
+| 3 | Gradient checking | Comparison of numerical and analytical gradients | **Completed** |
+| 4 | PyTorch fundamentals | Tensors, autograd, `nn.Module`, and training loops | Next |
 | 5 | MNIST MLP | Training and validation pipeline with result plots | Planned |
 | 6 | CIFAR-10 CNN | Comparison between a baseline CNN and an improved model | Planned |
 | 7 | Tiny PINN | Learning equation residuals, initial conditions, and boundary conditions | Planned |
@@ -49,7 +49,8 @@ MITDeepLearning-6.S191/
 └── study_free/
     ├── README.md
     └── notes/
-        └── day1_728.ipynb
+        ├── day1_728.ipynb
+        └── day2_801.ipynb
 ```
 
 As the study progresses, the core implementations will be organized into the
@@ -81,7 +82,9 @@ slides/
 ### Free Study
 
 This section contains independent implementations and explorations outside the
-fixed lecture sequence. The current notebook includes:
+fixed lecture sequence.
+
+[`day1_728.ipynb`](study_free/notes/day1_728.ipynb) covers the NumPy MLP:
 
 - A two-layer NumPy MLP trained on XOR without autograd
 - Forward propagation with Linear, ReLU, Sigmoid, and binary cross-entropy
@@ -91,7 +94,96 @@ fixed lecture sequence. The current notebook includes:
   batch dimensions, and bias broadcasting
 - A training-loss history and final prediction check
 
-## Latest Milestone: NumPy MLP
+[`day2_801.ipynb`](study_free/notes/day2_801.ipynb) covers gradient checking:
+
+- Why a decreasing loss is not evidence that backpropagation is correct
+- Central difference versus forward difference, and the origin of their
+  `O(h^2)` and `O(h)` error terms
+- Numerical gradients for every parameter, generalized into reusable
+  `numerical_gradient` and `max_relative_error` helpers
+- Three documented failure causes, each with its own error signature
+- A deliberately injected `sum`/`mean` bug and the diagnosis that followed
+- A diagnostic checklist for telling a real backpropagation bug apart from a
+  measurement artifact
+
+## Latest Milestone: Gradient Checking
+
+The manual backpropagation from the previous milestone was validated against
+numerical gradients on 2026-08-03, using the same XOR network and a fixed seed
+of `42`. All four parameters pass well below the `1e-5` target.
+
+| Parameter | Maximum relative error | Result |
+|---|---:|---|
+| `W1` | `4.827e-07` | PASS |
+| `b1` | `7.555e-07` | PASS |
+| `W2` | `1.575e-08` | PASS |
+| `b2` | `1.820e-09` | PASS |
+
+Each parameter is perturbed one element at a time, with the loss recomputed by
+a full forward pass on both sides and the original value restored afterwards:
+
+```python
+numerical = (loss_plus - loss_minus) / (2 * h)
+
+relative_error = (
+    np.abs(analytical - numerical)
+    / np.maximum(1e-8, np.abs(analytical) + np.abs(numerical))
+)
+```
+
+### Documented Failure Causes
+
+Passing the check turned out to be less instructive than the three ways it
+failed. Each cause leaves a distinctive signature in the relative error.
+
+| Cause | Error signature | Genuine backprop bug? |
+|---|---|---|
+| ReLU kink | exactly `1.0` | No — checked at a non-differentiable point |
+| Reduction mismatch (`sum` vs `mean`) | a fixed constant, `0.6` when `N = 4` | Yes |
+| Poorly chosen `h` | changes when `h` changes | No — a floating-point limitation |
+
+**ReLU kink.** Because `X[0]` is `[0, 0]` and `b1` starts at zeros, `Z1[0]` is
+exactly zero, so perturbing `b1` by `±h` straddles the ReLU corner. The
+analytical gradient commits to one side while the central difference averages
+both, and the relative error is exactly `1.0` wherever one side is zero.
+Re-checking away from the corner, where `min |Z1|` is `0.00278` against
+`h = 1e-5`, restores agreement at `7.555e-07` and proves the backward pass was
+correct all along.
+
+**Reduction mismatch.** Replacing `np.sum` with `np.mean` in `db2` scales the
+gradient by `1/N`. The relative error is then exactly `3/5`, since
+`|g - g/4| / (|g| + |g/4|)` reduces to `0.6`. No shape check can detect this
+class of bug.
+
+**Poorly chosen `h`.** Sweeping `h` produces a U-shaped error curve, because
+two error terms move in opposite directions:
+
+```text
+total error(h) ≈ C1 * h^2  +  C2 * eps / h
+                 truncation   cancellation
+```
+
+| `h` | Maximum relative error |
+|---|---:|
+| `1e-01` | `1.039e-05` |
+| `1e-02` | `1.039e-07` |
+| `1e-03` | `9.889e-10` |
+| `1e-05` | `1.575e-08` |
+| `1e-08` | `3.533e-05` |
+| `1e-12` | `1.818e-01` |
+| `1e-14` | `1.000e+00` |
+
+The left half measures the theory directly: each tenfold reduction in `h`
+divides the error by almost exactly `100`, which is what `O(h^2)` means. Past
+the minimum the trend reverses, because `loss_plus` and `loss_minus` agree in
+too many leading digits for `float64` to resolve their difference. At
+`h = 1e-14` that difference is `-2.22e-16`, roughly twice the smallest gap the
+format can represent, and the result is meaningless.
+
+The working notebook is
+[`study_free/notes/day2_801.ipynb`](study_free/notes/day2_801.ipynb).
+
+## Previous Milestone: NumPy MLP
 
 The first from-scratch neural-network milestone was completed on 2026-08-01.
 The model uses two input features, one hidden layer with eight ReLU units, and
@@ -136,12 +228,15 @@ The working implementation and accompanying explanations are recorded in
 
 The immediate follow-up work is to strengthen and validate the implementation:
 
-1. Refactor the NumPy MLP into initialization, forward, loss, backward, update,
-   and prediction functions.
-2. Add numerical gradient checking and target a relative error of `1e-5` or
-   lower.
-3. Record environment and dependency versions for reproducibility.
-4. Move to PyTorch tensors, autograd, `nn.Module`, and training loops.
+1. Pass the loss function into `numerical_gradient` explicitly. It currently
+   mutates a parameter array and relies on a module-level `compute_loss`
+   reading the same object, so calling it with a copy silently returns zeros.
+2. Warn when `min |Z1|` is close to `h`, so a ReLU kink is reported as a
+   measurement artifact rather than a failure.
+3. Extract the gradient-check helpers into a standalone, importable module.
+4. Record environment and dependency versions for reproducibility.
+5. Move to PyTorch tensors, autograd, `nn.Module`, and training loops, then
+   cross-check the manual gradients against `torch.autograd`.
 
 ## Definition of Done
 
