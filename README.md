@@ -42,9 +42,9 @@ regularization will be studied alongside the implementation roadmap.
 
 | Notebook | Focus |
 |---|---|
-| [`day1_728.ipynb`](study_free/notes/day1_728.ipynb) | Two-layer NumPy MLP for XOR, manual forward/backward passes, SGD updates, and tensor-shape checks |
-| [`day2_801.ipynb`](study_free/notes/day2_801.ipynb) | Numerical gradient checking, central differences, relative error, and diagnosis of ReLU kinks, reduction mismatches, and poor step sizes |
-| [`day3_803.ipynb`](study_free/notes/day3_803.ipynb) | Controlled experiments on learning rates, weight initialization, train/validation splits, reproducibility, and multi-seed stability |
+| [`day1_propagation.ipynb`](study_free/notes/day1_propagation.ipynb) | Two-layer NumPy MLP for XOR, manual forward/backward passes, SGD updates, and tensor-shape checks |
+| [`day2_gradient.ipynb`](study_free/notes/day2_gradient.ipynb) | Numerical gradient checking, central differences, relative error, and diagnosis of ReLU kinks, reduction mismatches, and poor step sizes |
+| [`day3_SgdLr.ipynb`](study_free/notes/day3_SgdLr.ipynb) | Controlled experiments on learning rates, weight initialization, train/validation splits, reproducibility, and multi-seed stability |
 
 Generated tables and plots from the experiments are stored in
 [`study_free/notes/results/`](study_free/notes/results/).
@@ -102,9 +102,10 @@ DeepLearning-StudyNote/
 └── study_free/
     ├── README.md
     └── notes/
-        ├── day1_728.ipynb
-        ├── day2_801.ipynb
-        ├── day3_803.ipynb
+        ├── day1_propagation.ipynb
+        ├── day2_gradient.ipynb
+        ├── day3_SgdLr.ipynb
+        ├── day4_introPyTorch.ipynb
         └── results/
 ```
 
