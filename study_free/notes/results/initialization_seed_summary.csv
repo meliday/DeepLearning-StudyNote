@@ -1,0 +1,6 @@
+initialization,success_rate,median_epoch,median_val_loss,minimum_val_accuracy
+zero,0/10,,0.694997,0.4625
+small,8/10,251.0,0.007369,0.7875
+large,8/10,46.0,0.004461,0.975
+xavier,9/10,220.0,0.005859,0.7875
+he,9/10,171.0,0.004393,0.7875
