@@ -1,12 +1,15 @@
 # Deep Learning Study Notes
 
 This repository documents my progress in learning deep learning through
-first-principles implementation and controlled experiments.
+first-principles implementation and controlled experiments. The main thread is
+the hands-on study track in [`study_free/`](study_free/), which develops each
+topic from a NumPy implementation into reproducible PyTorch experiments.
 
-Starting with MIT 6.S191, I am building from a NumPy neural network and manual
-backpropagation toward PyTorch, CNNs, and a small Physics-Informed Neural
-Network (PINN). The goal is to understand not only how a model runs, but why it
-works, how to verify it, and how experimental choices affect the result.
+MIT 6.S191 provided the starting point and remains an important lecture
+reference, while CS231n and other materials are used where they support the
+implementation roadmap. The goal is to understand not only how a model runs,
+but why it works, how to verify it, and how experimental choices affect the
+result.
 
 > This is an active study repository. Incomplete code and intermediate
 > experiments may remain as part of the learning record.
@@ -15,21 +18,37 @@ works, how to verify it, and how experimental choices affect the result.
 
 | Stage | Topic | Status |
 |---|---|---|
-| 1 | MIT 6.S191 fundamentals | In progress |
-| 2 | Two-layer NumPy MLP and manual backpropagation | Completed |
-| 3 | Numerical gradient checking | Completed |
-| 4 | Learning-rate and initialization experiments | Completed |
-| 5 | PyTorch fundamentals and autograd comparison | Next |
-| 6 | MNIST MLP | Planned |
-| 7 | CIFAR-10 CNN | Planned |
-| 8 | Tiny PINN | Planned |
+| Reference | MIT 6.S191 fundamentals | In progress |
+| 1 | Two-layer NumPy MLP and manual backpropagation | Completed |
+| 2 | Numerical gradient checking | Completed |
+| 3 | Learning-rate and initialization experiments | Completed |
+| 4 | PyTorch fundamentals and autograd comparison | Completed |
+| 5 | MNIST MLP | Next |
+| 6 | CIFAR-10 CNN | Planned |
+| 7 | Tiny PINN | Planned |
 
 CS231n topics such as optimization, convolution, normalization, and
 regularization will be studied alongside the implementation roadmap.
 
 ## Study Notes
 
-### MIT 6.S191
+### Core Implementation Track
+
+[`study_free/`](study_free/) is the central learning track in this repository.
+Its notebooks connect theory, implementation, verification, controlled
+experiments, and written interpretation in one cumulative sequence.
+
+| Notebook | Focus |
+|---|---|
+| [`day1_propagation.ipynb`](study_free/notes/day1_propagation.ipynb) | Two-layer NumPy MLP for XOR, manual forward/backward passes, SGD updates, and tensor-shape checks |
+| [`day2_gradient.ipynb`](study_free/notes/day2_gradient.ipynb) | Numerical gradient checking, central differences, relative error, and diagnosis of ReLU kinks, reduction mismatches, and poor step sizes |
+| [`day3_SgdLr.ipynb`](study_free/notes/day3_SgdLr.ipynb) | Controlled experiments on learning rates, weight initialization, train/validation splits, reproducibility, and multi-seed stability |
+| [`day4_introPyTorch.ipynb`](study_free/notes/day4_introPyTorch.ipynb) | PyTorch tensor operations, `nn.Module`, an SGD training loop, evaluation mode, and comparison of manual NumPy gradients with autograd |
+
+Generated tables and plots from the experiments are stored in
+[`study_free/notes/results/`](study_free/notes/results/).
+
+### Course References
 
 [`MIT-6.S191/`](MIT-6.S191/) contains lecture-based notes and examples on:
 
@@ -37,17 +56,6 @@ regularization will be studied alongside the implementation roadmap.
 - Activation functions and loss functions
 - Gradient descent and backpropagation
 - Introductory PyTorch and TensorFlow syntax
-
-### From-Scratch Experiments
-
-| Notebook | Focus |
-|---|---|
-| [`day1_propagation.ipynb`](study_free/notes/day1_propagation.ipynb) | Two-layer NumPy MLP for XOR, manual forward/backward passes, SGD updates, and tensor-shape checks |
-| [`day2_gradient.ipynb`](study_free/notes/day2_gradient.ipynb) | Numerical gradient checking, central differences, relative error, and diagnosis of ReLU kinks, reduction mismatches, and poor step sizes |
-| [`day3_SgdLr.ipynb`](study_free/notes/day3_SgdLr.ipynb) | Controlled experiments on learning rates, weight initialization, train/validation splits, reproducibility, and multi-seed stability |
-
-Generated tables and plots from the experiments are stored in
-[`study_free/notes/results/`](study_free/notes/results/).
 
 ## Key Results
 
@@ -90,6 +98,18 @@ conditions with fixed data, architecture, training duration, and random seeds.
 - A fast result from one seed was not sufficient evidence of a robust setup;
   validation performance and multi-seed success rates were also needed.
 
+### PyTorch and Autograd
+
+The NumPy binary classifier was rebuilt with `nn.Linear`, `nn.ReLU`,
+`BCEWithLogitsLoss`, and `torch.optim.SGD`.
+
+- After 1,000 epochs, the training loss reached `0.008252` and the validation
+  loss reached `0.006746`.
+- Training and validation accuracy both reached `100%` on the fixed split.
+- Manual NumPy gradients matched PyTorch autograd for `W1`, `b1`, `W2`, and
+  `b2` with an absolute tolerance of `1e-6`.
+- The largest reported gradient difference was `6.985e-10` for `W1`.
+
 ## Repository Structure
 
 ```text
@@ -119,10 +139,10 @@ DeepLearning-StudyNote/
 
 ## Next Steps
 
-1. Rebuild the model with PyTorch tensors and `nn.Module`.
-2. Compare the manual gradients with `torch.autograd`.
-3. Add environment and dependency specifications.
-4. Move to a reproducible MNIST training and validation pipeline.
+1. Add environment and dependency specifications.
+2. Build a reproducible MNIST training and validation pipeline.
+3. Compare MLP architectures and regularization choices on MNIST.
+4. Move from fully connected networks to a CIFAR-10 CNN.
 
 ## References
 
